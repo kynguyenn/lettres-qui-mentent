@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Les lettres qui mentent</title>
+<meta name="description" content="Démo pédagogique : attaques par homographes (IDN) — lettres cyrilliques déguisées en lettres latines.">
+<style>
+:root{
+  --bg:#f7f5f0; --card:#ffffff; --ink:#1c1b19; --muted:#6b6760; --line:#e3dfd6;
+  --accent:#1f4fd1; --good:#1d7a46; --bad:#c2321f; --warn-bg:#fdecea; --good-bg:#e7f4ec;
+  --mark:#ffe08a;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#141412; --card:#1e1d1a; --ink:#f0ede6; --muted:#a29d93; --line:#34322d;
+    --accent:#7aa2ff; --good:#5fcf8d; --bad:#ff7a66; --warn-bg:#3a1f1b; --good-bg:#16301f; --mark:#6b5410; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+main{max-width:760px;margin:0 auto;padding:24px 16px 64px}
+header h1{font-size:2rem;line-height:1.15;margin:.2em 0 .3em}
+header p{color:var(--muted);margin:0}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 8px}
+nav a{color:var(--accent);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:.92rem;background:var(--card)}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:20px}
+h2{margin:0 0 .4em;font-size:1.3rem}
+.muted{color:var(--muted)}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 16px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button:disabled{opacity:.5;cursor:default}
+/* Jeu */
+.domain{font-size:clamp(1.4rem,6vw,2.2rem);font-weight:600;text-align:center;padding:28px 8px;
+  border:2px dashed var(--line);border-radius:12px;margin:14px 0;word-break:break-all}
+.choices{display:flex;gap:12px;justify-content:center}
+.choices button{min-width:130px;font-size:1.05rem}
+.progress{font-size:.9rem;color:var(--muted);text-align:center}
+.feedback{margin-top:14px;padding:12px 14px;border-radius:10px;display:none}
+.feedback.ok{display:block;background:var(--good-bg)}
+.feedback.ko{display:block;background:var(--warn-bg)}
+.score{font-size:1.5rem;font-weight:700;text-align:center;margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+td code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;word-break:break-all}
+.tag{display:inline-block;font-size:.78rem;padding:1px 8px;border-radius:999px;font-weight:600}
+.tag.v{background:var(--good-bg);color:var(--good)} .tag.f{background:var(--warn-bg);color:var(--bad)}
+/* Inspecteur */
+input[type=text]{width:100%;font:inherit;font-size:1.15rem;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.presets button{padding:5px 10px;font-size:.9rem}
+.chars{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
+.ch{border:1px solid var(--line);border-radius:8px;padding:6px 8px;text-align:center;min-width:54px}
+.ch b{display:block;font-size:1.5rem;font-weight:600}
+.ch small{display:block;font-size:.7rem;color:var(--muted);font-family:ui-monospace,Menlo,Consolas,monospace}
+.ch.alien{border-color:var(--bad);background:var(--warn-bg)}
+.ch.alien small{color:var(--bad)}
+.verdict{padding:12px 14px;border-radius:10px;margin-top:6px}
+.verdict.ok{background:var(--good-bg)} .verdict.ko{background:var(--warn-bg)}
+.puny{font-size:1.1rem}
+/* Lien */
+.fakelink{font-size:1.15rem;color:var(--accent);word-break:break-all}
+#recap td:first-child{word-break:break-all;width:42%}
+#recap td:last-child{width:40%}
+@media (max-width:480px){ table{font-size:.8rem} }
+#piege{display:none}
+#piege:target{display:block}
+footer{margin-top:28px;font-size:.85rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Les lettres qui mentent</h1>
+  <p>Petite démo sur les attaques par <em>homographes</em> : quand une adresse web a l'air parfaitement normale… mais ne l'est pas.</p>
+</header>
+<nav>
+  <a href="#jeu">1 · Le jeu</a>
+  <a href="#inspecteur">2 · L'inspecteur</a>
+  <a href="#lien">3 · Le lien qui ment</a>
+  <a href="#retenir">4 · À retenir</a>
+</nav>
+
+<!-- 1. JEU -->
+<section id="jeu">
+  <h2>1 · Vraie ou fausse adresse ?</h2>
+  <p class="muted">Pour chaque adresse : est-ce la vraie, ou une imitation ? Ne trichez pas en zoomant !</p>
+  <div id="game">
+    <div class="progress" id="progress"></div>
+    <div class="domain" id="domain"></div>
+    <div class="choices">
+      <button id="btnVrai">✅ Vraie</button>
+      <button id="btnFaux">🚩 Fausse</button>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <div style="text-align:center;margin-top:12px"><button class="primary" id="btnNext" style="display:none">Suivante →</button></div>
+  </div>
+  <div id="result" style="display:none">
+    <div class="score" id="score"></div>
+    <p class="muted" style="text-align:center">Voici ce que votre ordinateur voyait vraiment :</p>
+    <table>
+      <thead><tr><th>Ce que vous avez vu</th><th>Réponse</th><th>Ce que voit la machine</th></tr></thead>
+      <tbody id="recap"></tbody>
+    </table>
+    <div style="text-align:center;margin-top:14px"><button id="btnReplay">Rejouer</button></div>
+  </div>
+</section>
+
+<!-- 2. INSPECTEUR -->
+<section id="inspecteur">
+  <h2>2 · L'inspecteur de lettres</h2>
+  <p class="muted">Collez une adresse. Chaque caractère est affiché avec son numéro Unicode ; les lettres non latines sont signalées en rouge.</p>
+  <input type="text" id="insp" value="аррӏе.com" autocomplete="off" spellcheck="false" aria-label="Adresse à inspecter">
+  <div class="presets" id="presets"></div>
+  <div class="chars" id="chars"></div>
+  <div class="verdict" id="verdict"></div>
+</section>
+
+<!-- 3. LIEN -->
+<section id="lien">
+  <h2>3 · Le lien qui ment</h2>
+  <p>Le texte d'un lien et sa destination sont deux choses différentes. Celui-ci a l'air sûr :</p>
+  <p><a class="fakelink" href="#piege">https://www.impots.gouv.fr/remboursement</a></p>
+  <p class="muted">Sur ordinateur : survolez-le et regardez en bas à gauche de la fenêtre. Sur téléphone : appui long. (Ce lien est inoffensif : il reste sur cette page.)</p>
+  <div id="piege" class="verdict ko">
+    <strong>Vous avez cliqué sans vérifier 😉</strong><br>
+    Le lien affichait <code>impots.gouv.fr</code>, mais il menait ici. Dans un vrai e-mail de phishing, il aurait pu mener n'importe où — y compris vers une adresse en lettres cyrilliques, avec un cadenas 🔒 parfaitement valide.
+  </div>
+</section>
+
+<!-- 4. RETENIR -->
+<section id="retenir">
+  <h2>4 · À retenir</h2>
+  <ul>
+    <li><strong>Une adresse peut être identique à l'œil et différente pour la machine.</strong> Le « о » cyrillique (U+043E) et le « o » latin (U+006F) sont deux lettres distinctes.</li>
+    <li><strong>Le cadenas 🔒 ne garantit pas l'identité.</strong> Il garantit que la connexion est chiffrée… avec le site que vous visitez, quel qu'il soit. Un faux site obtient facilement son certificat.</li>
+    <li><strong>Laissez la machine comparer, pas vos yeux.</strong> Un gestionnaire de mots de passe ne remplit pas votre mot de passe sur une fausse adresse. Les <em>passkeys</em> (clés d'accès) vont plus loin : la signature cryptographique est liée à la vraie adresse, donc inutilisable par l'imposteur.</li>
+    <li><strong>Pour les sites importants</strong> (banque, impôts, santé) : favori ou adresse tapée à la main, jamais le lien d'un e-mail ou d'un SMS.</li>
+  </ul>
+</section>
+
+<footer>
+  Démo pédagogique. Les adresses imitées ne sont pas enregistrées ici et aucune ne mène à un vrai site : elles ne servent qu'à montrer le principe.
+</footer>
+</main>
+
+<script>
+// ---------- Données ----------
+const ITEMS = [
+  { s: "impots.gouv.fr",            real: true,  why: "C'est bien l'adresse officielle." },
+  { s: "impоts.gouv.fr",            real: false, why: "Le « o » est un о cyrillique (U+043E)." },
+  { s: "laposte.fr",                real: true,  why: "C'est bien l'adresse officielle." },
+  { s: "lароstе.fr",                real: false, why: "4 lettres cyrilliques : а, р, о, е." },
+  { s: "rnicrosoft.com",            real: false, why: "« rn » (r + n) et non « m ». Aucune astuce Unicode : juste vos yeux." },
+  { s: "ameli.fr",                  real: true,  why: "C'est bien l'adresse officielle." },
+  { s: "impots.gouv.fr.verification-dossier.com", real: false, why: "Le vrai propriétaire est « verification-dossier.com » : tout ce qui est avant n'est qu'un décor." },
+  { s: "ѕоrbоnnе-univеrѕitе.fr",    real: false, why: "7 lettres cyrilliques (ѕ, о, е…). Pas une seule lettre latine « o » ou « e »." },
+];
+
+// Noms lisibles des confusables courants
+const NAMES = {
+  0x0430:"a cyrillique",0x0435:"e cyrillique",0x043E:"o cyrillique",0x0440:"r cyrillique (« er »)",
+  0x0441:"s cyrillique (« es »)",0x0443:"u cyrillique",0x0445:"kha cyrillique",0x0455:"dze cyrillique",
+  0x0456:"i cyrillique (ukrainien)",0x0458:"je cyrillique",0x04CF:"palotchka cyrillique",
+  0x03BF:"omicron grec",0x03B1:"alpha grec",0x03BD:"nu grec",0x03C1:"rho grec",
+};
+
+const isAscii = c => c.codePointAt(0) < 128;
+function scriptOf(c){
+  if (isAscii(c)) return "Latin";
+  if (/\p{Script=Cyrillic}/u.test(c)) return "Cyrillique";
+  if (/\p{Script=Greek}/u.test(c)) return "Grec";
+  if (/\p{Script=Latin}/u.test(c)) return "Latin";
+  return "Autre";
+}
+function toPuny(host){
+  try { return new URL("https://" + host).hostname; } catch(e){ return "(adresse invalide)"; }
+}
+const hex = c => "U+" + c.codePointAt(0).toString(16).toUpperCase().padStart(4,"0");
+const esc = s => s.replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+function highlighted(s){
+  return [...s].map(c => isAscii(c) ? esc(c) : `<mark style="background:var(--mark)">${esc(c)}</mark>`).join("");
+}
+
+// ---------- Jeu ----------
+let i = 0, answers = [];
+const $ = id => document.getElementById(id);
+function show(){
+  const it = ITEMS[i];
+  $("progress").textContent = `Adresse ${i+1} / ${ITEMS.length}`;
+  $("domain").textContent = it.s;
+  $("feedback").className = "feedback"; $("feedback").textContent = "";
+  $("btnVrai").disabled = $("btnFaux").disabled = false;
+  $("btnNext").style.display = "none";
+}
+function answer(saidReal){
+  const it = ITEMS[i], ok = saidReal === it.real;
+  answers[i] = ok;
+  $("btnVrai").disabled = $("btnFaux").disabled = true;
+  const fb = $("feedback");
+  fb.className = "feedback " + (ok ? "ok" : "ko");
+  fb.innerHTML = `<strong>${ok ? "Bien vu !" : "Raté !"}</strong> ${it.real ? "Vraie adresse." : "Fausse adresse."} ${esc(it.why)}`;
+  $("btnNext").style.display = "inline-block";
+  $("btnNext").textContent = i === ITEMS.length - 1 ? "Voir le résultat →" : "Suivante →";
+}
+function finish(){
+  $("game").style.display = "none"; $("result").style.display = "block";
+  const n = answers.filter(Boolean).length;
+  $("score").textContent = `${n} / ${ITEMS.length}`;
+  $("recap").innerHTML = ITEMS.map(it => {
+    const p = toPuny(it.s);
+    return `<tr><td>${esc(it.s)}</td>
+      <td><span class="tag ${it.real ? "v" : "f"}">${it.real ? "vraie" : "fausse"}</span></td>
+      <td><code>${p.startsWith("xn--") || p.includes(".xn--") ? highlighted(p) : esc(p)}</code></td></tr>`;
+  }).join("");
+}
+$("btnVrai").onclick = () => answer(true);
+$("btnFaux").onclick = () => answer(false);
+$("btnNext").onclick = () => { i++; i < ITEMS.length ? show() : finish(); };
+$("btnReplay").onclick = () => { i = 0; answers = []; $("result").style.display="none"; $("game").style.display="block"; show(); };
+show();
+
+// ---------- Inspecteur ----------
+const PRESETS = ["apple.com","аррӏе.com","google.com","gооgle.com","impоts.gouv.fr","раураl.com"];
+$("presets").innerHTML = PRESETS.map(p => `<button type="button">${esc(p)}</button>`).join("");
+[...$("presets").children].forEach((b,k) => b.onclick = () => { $("insp").value = PRESETS[k]; inspect(); });
+
+function inspect(){
+  const s = $("insp").value.trim();
+  const chars = [...s];
+  $("chars").innerHTML = chars.map(c => {
+    const alien = !isAscii(c);
+    const label = alien ? (NAMES[c.codePointAt(0)] || scriptOf(c)) : "latin";
+    return `<div class="ch${alien ? " alien" : ""}" title="${esc(label)}"><b>${esc(c)}</b><small>${hex(c)}</small><small>${esc(label)}</small></div>`;
+  }).join("");
+  const aliens = chars.filter(c => !isAscii(c));
+  const scripts = [...new Set(aliens.map(scriptOf))];
+  const p = toPuny(s);
+  const v = $("verdict");
+  if (!s){ v.className="verdict"; v.innerHTML=""; return; }
+  if (aliens.length === 0){
+    v.className = "verdict ok";
+    v.innerHTML = `✅ Uniquement des caractères latins simples.<br>La machine voit : <span class="mono puny">${esc(p)}</span>`;
+  } else {
+    v.className = "verdict ko";
+    v.innerHTML = `🚩 ${aliens.length} caractère(s) non latin(s) (${scripts.join(", ")}).<br>
+      La machine voit en réalité : <span class="mono puny">${highlighted(p)}</span><br>
+      <span class="muted">C'est le « Punycode » : la façon dont une adresse internationale est écrite en coulisses (préfixe <code>xn--</code>).</span>`;
+  }
+}
+$("insp").addEventListener("input", inspect);
+inspect();
+</script>
+</body>
+</html>
