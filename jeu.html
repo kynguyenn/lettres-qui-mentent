@@ -46,13 +46,13 @@
 <script>
 const ITEMS = [
   { s: "impots.gouv.fr",            real: true,  why: "C'est bien l'adresse officielle." },
-  { s: "impоts.gouv.fr",            real: false, why: "Le « o » est un о cyrillique (U+043E)." },
+  { s: "impоts.gouv.fr",            real: false, why: "Le « o » est un о cyrillique (U+043E). Copier-coller sur navigateur donne: xn--impts-lye.gouv.fr" },
   { s: "laposte.fr",                real: true,  why: "C'est bien l'adresse officielle." },
-  { s: "lароstе.fr",                real: false, why: "4 lettres cyrilliques : а, р, о, е." },
+  { s: "lароstе.fr",                real: false, why: "4 lettres cyrilliques : а, р, о, е. Copier-collez sur navigateur donne: xn--lst-6cd1a5cn.fr" },
   { s: "rnicrosoft.com",            real: false, why: "« rn » (r + n) et non « m ». Aucune astuce Unicode : juste vos yeux." },
   { s: "ameli.fr",                  real: true,  why: "C'est bien l'adresse officielle." },
   { s: "impots.gouv.fr.verification-dossier.com", real: false, why: "Le vrai propriétaire est « verification-dossier.com » : tout ce qui est avant n'est qu'un décor." },
-  { s: "ѕоrbоnnе-univеrѕitе.fr",    real: false, why: "7 lettres cyrilliques (ѕ, о, е…). Pas une seule lettre latine « o » ou « e »." },
+  { s: "ѕоrbоnnе-univеrѕitе.fr",    real: false, why: "7 lettres cyrilliques (ѕ, о, е…). Pas une seule lettre latine « o » ou « e ». Copier-coller sur navigateur donne: xn--rbnn-univrit-vckfd3kc42boa.fr" },
 ];
 const isAscii = c => c.codePointAt(0) < 128;
 const toPuny = h => { try { return new URL("https://" + h).hostname; } catch(e){ return "(adresse invalide)"; } };
