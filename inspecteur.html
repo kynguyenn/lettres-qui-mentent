@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L'inspecteur de lettres</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <div class="topbar"><a class="back" href="index.html">← Menu</a><span class="step">2 / 4</span></div>
+
+  <section>
+    <h2>L'inspecteur de lettres</h2>
+    <p class="muted">Collez une adresse. Chaque caractère est affiché avec son numéro Unicode ; les lettres non latines sont signalées en rouge.</p>
+    <input type="text" id="insp" value="аррӏе.com" autocomplete="off" spellcheck="false" aria-label="Adresse à inspecter">
+    <div class="presets" id="presets"></div>
+    <div class="chars" id="chars"></div>
+    <div class="verdict" id="verdict"></div>
+  </section>
+
+  <p class="next"><a href="lien.html">Suivant : le lien qui ment →</a></p>
+</main>
+
+<script>
+const NAMES = {
+  0x0430:"a cyrillique",0x0435:"e cyrillique",0x043E:"o cyrillique",0x0440:"r cyrillique (« er »)",
+  0x0441:"s cyrillique (« es »)",0x0443:"u cyrillique",0x0445:"kha cyrillique",0x0455:"dze cyrillique",
+  0x0456:"i cyrillique (ukrainien)",0x0458:"je cyrillique",0x04CF:"palotchka cyrillique",
+  0x03BF:"omicron grec",0x03B1:"alpha grec",0x03BD:"nu grec",0x03C1:"rho grec",
+};
+const isAscii = c => c.codePointAt(0) < 128;
+function scriptOf(c){
+  if (isAscii(c)) return "Latin";
+  if (/\p{Script=Cyrillic}/u.test(c)) return "Cyrillique";
+  if (/\p{Script=Greek}/u.test(c)) return "Grec";
+  if (/\p{Script=Latin}/u.test(c)) return "Latin";
+  return "Autre";
+}
+const toPuny = h => { try { return new URL("https://" + h).hostname; } catch(e){ return "(adresse invalide)"; } };
+const hex = c => "U+" + c.codePointAt(0).toString(16).toUpperCase().padStart(4,"0");
+const esc = s => s.replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const highlighted = s => [...s].map(c => isAscii(c) ? esc(c) : `<mark style="background:var(--mark)">${esc(c)}</mark>`).join("");
+const $ = id => document.getElementById(id);
+
+const PRESETS = ["apple.com","аррӏе.com","google.com","gооgle.com","impоts.gouv.fr","раураl.com"];
+$("presets").innerHTML = PRESETS.map(p => `<button type="button">${esc(p)}</button>`).join("");
+[...$("presets").children].forEach((b,k) => b.onclick = () => { $("insp").value = PRESETS[k]; inspect(); });
+
+function inspect(){
+  const s = $("insp").value.trim();
+  const chars = [...s];
+  $("chars").innerHTML = chars.map(c => {
+    const alien = !isAscii(c);
+    const label = alien ? (NAMES[c.codePointAt(0)] || scriptOf(c)) : "latin";
+    return `<div class="ch${alien ? " alien" : ""}" title="${esc(label)}"><b>${esc(c)}</b><small>${hex(c)}</small><small>${esc(label)}</small></div>`;
+  }).join("");
+  const aliens = chars.filter(c => !isAscii(c));
+  const scripts = [...new Set(aliens.map(scriptOf))];
+  const p = toPuny(s);
+  const v = $("verdict");
+  if (!s){ v.className="verdict"; v.innerHTML=""; return; }
+  if (aliens.length === 0){
+    v.className = "verdict ok";
+    v.innerHTML = `✅ Uniquement des caractères latins simples.<br>La machine voit : <span class="mono puny">${esc(p)}</span>`;
+  } else {
+    v.className = "verdict ko";
+    v.innerHTML = `🚩 ${aliens.length} caractère(s) non latin(s) (${scripts.join(", ")}).<br>
+      La machine voit en réalité : <span class="mono puny">${highlighted(p)}</span><br>
+      <span class="muted">C'est le « Punycode » : la façon dont une adresse internationale est écrite en coulisses (préfixe <code>xn--</code>).</span>`;
+  }
+}
+$("insp").addEventListener("input", inspect);
+inspect();
+</script>
+</body>
+</html>

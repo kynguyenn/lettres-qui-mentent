@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vraie ou fausse adresse ?</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <div class="topbar"><a class="back" href="index.html">← Menu</a><span class="step">1 / 4</span></div>
+
+  <section>
+    <h2>Vraie ou fausse adresse ?</h2>
+    <p class="muted">Pour chaque adresse : est-ce la vraie, ou une imitation ? Ne trichez pas en zoomant !</p>
+    <div id="game">
+      <div class="progress" id="progress"></div>
+      <div class="domain" id="domain"></div>
+      <div class="choices">
+        <button id="btnVrai">✅ Vraie</button>
+        <button id="btnFaux">🚩 Fausse</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <div style="text-align:center;margin-top:12px"><button class="primary" id="btnNext" style="display:none">Suivante →</button></div>
+    </div>
+    <div id="result" style="display:none">
+      <div class="score" id="score"></div>
+      <p class="muted" style="text-align:center">Voici ce que votre ordinateur voyait vraiment :</p>
+      <table>
+        <thead><tr><th>Ce que vous avez vu</th><th>Réponse</th><th>Ce que voit la machine</th></tr></thead>
+        <tbody id="recap"></tbody>
+      </table>
+      <div style="text-align:center;margin-top:14px"><button id="btnReplay">Rejouer</button></div>
+    </div>
+  </section>
+
+  <p class="next"><a href="inspecteur.html">Suivant : l'inspecteur de lettres →</a></p>
+</main>
+
+<script>
+const ITEMS = [
+  { s: "impots.gouv.fr",            real: true,  why: "C'est bien l'adresse officielle." },
+  { s: "impоts.gouv.fr",            real: false, why: "Le « o » est un о cyrillique (U+043E)." },
+  { s: "laposte.fr",                real: true,  why: "C'est bien l'adresse officielle." },
+  { s: "lароstе.fr",                real: false, why: "4 lettres cyrilliques : а, р, о, е." },
+  { s: "rnicrosoft.com",            real: false, why: "« rn » (r + n) et non « m ». Aucune astuce Unicode : juste vos yeux." },
+  { s: "ameli.fr",                  real: true,  why: "C'est bien l'adresse officielle." },
+  { s: "impots.gouv.fr.verification-dossier.com", real: false, why: "Le vrai propriétaire est « verification-dossier.com » : tout ce qui est avant n'est qu'un décor." },
+  { s: "ѕоrbоnnе-univеrѕitе.fr",    real: false, why: "7 lettres cyrilliques (ѕ, о, е…). Pas une seule lettre latine « o » ou « e »." },
+];
+const isAscii = c => c.codePointAt(0) < 128;
+const toPuny = h => { try { return new URL("https://" + h).hostname; } catch(e){ return "(adresse invalide)"; } };
+const esc = s => s.replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const highlighted = s => [...s].map(c => isAscii(c) ? esc(c) : `<mark style="background:var(--mark)">${esc(c)}</mark>`).join("");
+
+let i = 0, answers = [];
+const $ = id => document.getElementById(id);
+function show(){
+  const it = ITEMS[i];
+  $("progress").textContent = `Adresse ${i+1} / ${ITEMS.length}`;
+  $("domain").textContent = it.s;
+  $("feedback").className = "feedback"; $("feedback").textContent = "";
+  $("btnVrai").disabled = $("btnFaux").disabled = false;
+  $("btnNext").style.display = "none";
+}
+function answer(saidReal){
+  const it = ITEMS[i], ok = saidReal === it.real;
+  answers[i] = ok;
+  $("btnVrai").disabled = $("btnFaux").disabled = true;
+  const fb = $("feedback");
+  fb.className = "feedback " + (ok ? "ok" : "ko");
+  fb.innerHTML = `<strong>${ok ? "Bien vu !" : "Raté !"}</strong> ${it.real ? "Vraie adresse." : "Fausse adresse."} ${esc(it.why)}`;
+  $("btnNext").style.display = "inline-block";
+  $("btnNext").textContent = i === ITEMS.length - 1 ? "Voir le résultat →" : "Suivante →";
+}
+function finish(){
+  $("game").style.display = "none"; $("result").style.display = "block";
+  $("score").textContent = `${answers.filter(Boolean).length} / ${ITEMS.length}`;
+  $("recap").innerHTML = ITEMS.map(it => {
+    const p = toPuny(it.s);
+    return `<tr><td>${esc(it.s)}</td>
+      <td><span class="tag ${it.real ? "v" : "f"}">${it.real ? "vraie" : "fausse"}</span></td>
+      <td><code>${p.includes("xn--") ? highlighted(p) : esc(p)}</code></td></tr>`;
+  }).join("");
+}
+$("btnVrai").onclick = () => answer(true);
+$("btnFaux").onclick = () => answer(false);
+$("btnNext").onclick = () => { i++; i < ITEMS.length ? show() : finish(); };
+$("btnReplay").onclick = () => { i = 0; answers = []; $("result").style.display="none"; $("game").style.display="block"; show(); };
+show();
+</script>
+</body>
+</html>

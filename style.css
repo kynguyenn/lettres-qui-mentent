@@ -1,0 +1,78 @@
+:root{
+  --bg:#f7f5f0; --card:#ffffff; --ink:#1c1b19; --muted:#6b6760; --line:#e3dfd6;
+  --accent:#1f4fd1; --good:#1d7a46; --bad:#c2321f; --warn-bg:#fdecea; --good-bg:#e7f4ec;
+  --mark:#ffe08a;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#141412; --card:#1e1d1a; --ink:#f0ede6; --muted:#a29d93; --line:#34322d;
+    --accent:#7aa2ff; --good:#5fcf8d; --bad:#ff7a66; --warn-bg:#3a1f1b; --good-bg:#16301f; --mark:#6b5410; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 64px}
+h1{font-size:2rem;line-height:1.15;margin:.2em 0 .3em}
+h2{margin:0 0 .4em;font-size:1.4rem}
+.muted{color:var(--muted)}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:16px}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 16px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button:disabled{opacity:.5;cursor:default}
+
+/* Barre du haut : retour + étape */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--accent);text-decoration:none;
+  border:1px solid var(--line);border-radius:999px;padding:8px 14px;background:var(--card);font-size:.95rem}
+.step{font-size:.85rem;color:var(--muted)}
+.next{display:block;text-align:right;margin-top:20px}
+.next a{color:var(--accent);text-decoration:none;font-weight:600}
+
+/* Menu */
+.menu{display:grid;gap:12px;margin-top:20px}
+.menu a{display:flex;gap:16px;align-items:center;text-decoration:none;color:var(--ink);
+  background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.menu a:hover{border-color:var(--accent)}
+.menu .num{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
+  background:var(--accent);color:#fff;font-weight:700;font-size:1.1rem}
+.menu b{display:block;font-size:1.1rem}
+.menu span.d{color:var(--muted);font-size:.93rem}
+
+/* Jeu */
+.domain{font-size:clamp(1.4rem,6vw,2.2rem);font-weight:600;text-align:center;padding:28px 8px;
+  border:2px dashed var(--line);border-radius:12px;margin:14px 0;word-break:break-all}
+.choices{display:flex;gap:12px;justify-content:center}
+.choices button{min-width:130px;font-size:1.05rem}
+.progress{font-size:.9rem;color:var(--muted);text-align:center}
+.feedback{margin-top:14px;padding:12px 14px;border-radius:10px;display:none}
+.feedback.ok{display:block;background:var(--good-bg)}
+.feedback.ko{display:block;background:var(--warn-bg)}
+.score{font-size:1.5rem;font-weight:700;text-align:center;margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+td code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;word-break:break-all}
+#recap td:first-child{word-break:break-all;width:42%}
+#recap td:last-child{width:40%}
+@media (max-width:480px){ table{font-size:.8rem} }
+.tag{display:inline-block;font-size:.78rem;padding:1px 8px;border-radius:999px;font-weight:600}
+.tag.v{background:var(--good-bg);color:var(--good)} .tag.f{background:var(--warn-bg);color:var(--bad)}
+
+/* Inspecteur */
+input[type=text]{width:100%;font:inherit;font-size:1.15rem;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.presets button{padding:5px 10px;font-size:.9rem}
+.chars{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
+.ch{border:1px solid var(--line);border-radius:8px;padding:6px 8px;text-align:center;min-width:54px}
+.ch b{display:block;font-size:1.5rem;font-weight:600}
+.ch small{display:block;font-size:.7rem;color:var(--muted);font-family:ui-monospace,Menlo,Consolas,monospace}
+.ch.alien{border-color:var(--bad);background:var(--warn-bg)}
+.ch.alien small{color:var(--bad)}
+.verdict{padding:12px 14px;border-radius:10px;margin-top:6px}
+.verdict.ok{background:var(--good-bg)} .verdict.ko{background:var(--warn-bg)}
+.puny{font-size:1.1rem}
+
+/* Lien */
+.fakelink{font-size:1.15rem;color:var(--accent);word-break:break-all}
+#piege{display:none}
+#piege:target{display:block}
+
+footer{margin-top:28px;font-size:.85rem;color:var(--muted)}

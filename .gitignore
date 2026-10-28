@@ -1,0 +1,28 @@
+*~
+.DS_Store
+cryptobib/.DS_Store
+_build/*
+*/_build/*
+*.log
+*.gz
+*.synctex.gz
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.out
+*.thm
+*_latexmk
+*#
+*.fls
+.vscode/*
+*.mtc*
+*.maf
+*/.*
+neurips_2025.pdf
+arxiv.pdf
+*/*.pdf
+
+# Autorun launcher scaffold (regenerable; worker output lives in research/exploration/<slug>/).
+# Auto-added by auto-launch.sh scaffold-leak guard.
+research/exploration/auto-launch-*/
